@@ -1,6 +1,5 @@
 package ai.shreds.domain.entities;
 
-import ai.shreds.shared.dtos.SharedApprovalAuditLogDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -157,24 +156,5 @@ public class DomainApprovalAuditLogEntity {
      */
     public String getFormattedTimestamp() {
         return timestamp != null ? timestamp.format(DATE_FORMATTER) : null;
-    }
-
-    /**
-     * Converts this entity to a DTO for external communication.
-     * 
-     * @return a DTO representing this entity
-     */
-    public SharedApprovalAuditLogDTO toDTO() {
-        return SharedApprovalAuditLogDTO.builder()
-                .auditId(auditId)
-                .approvalRequestId(approvalRequestId)
-                .action(action)
-                .performedById(performedById)
-                .oldValue(oldValue)
-                .newValue(newValue)
-                .timestamp(getFormattedTimestamp())
-                .ipAddress(ipAddress)
-                .userAgent(userAgent)
-                .build();
     }
 }
