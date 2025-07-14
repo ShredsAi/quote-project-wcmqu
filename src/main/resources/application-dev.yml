@@ -1,0 +1,43 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  datasource:
+    url: jdbc:postgresql://localhost:5432/approval_db_dev
+    username: approval_user
+    password: dev_password
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+logging:
+  level:
+    root: DEBUG
+    ai.shreds: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type: TRACE
+    org.springframework.amqp: DEBUG
+    org.springframework.web: DEBUG
+
+approval:
+  business-rules:
+    max-processing-time-hours: 1
+    high-priority-processing-time-hours: 0.5
+    urgent-processing-time-hours: 0.25
+    max-queue-capacity: 100
+    deadline-alert-hours-before: 0.5
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
