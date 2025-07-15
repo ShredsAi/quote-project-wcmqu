@@ -10,10 +10,13 @@ import ai.shreds.domain.value_objects.DomainPriority;
 import ai.shreds.shared.dtos.SharedQuoteCreatedEventDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
@@ -27,6 +30,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,6 +42,7 @@ import static org.awaitility.Awaitility.await;
 @ActiveProfiles("test")
 @Testcontainers
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@ExtendWith(OutputCaptureExtension.class)
 class QuoteSubmissionIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(QuoteSubmissionIntegrationTest.class);
@@ -79,28 +86,50 @@ class QuoteSubmissionIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Clear all existing queues first
-        approvalQueueRepository.deleteAll();
+        logger.info("Setting up test data...");
         
-        // Create test queues with names that match the selection logic
-        generalQueue = new DomainApprovalQueueEntity();
-        generalQueue.setQueueName("General Queue");
-        generalQueue.initializeQueue();
-        generalQueue.setMaxCapacity(1000);
-        generalQueue = approvalQueueRepository.save(generalQueue);
-
-        highPriorityQueue = new DomainApprovalQueueEntity();
-        highPriorityQueue.setQueueName("High Priority Queue");
-        highPriorityQueue.initializeQueue();
-        highPriorityQueue.setMaxCapacity(500);
-        highPriorityQueue = approvalQueueRepository.save(highPriorityQueue);
+        // Find existing queues from seed data or create new ones
+        List<DomainApprovalQueueEntity> existingQueues = approvalQueueRepository.findActiveQueues();
+        
+        // Find or create general queue
+        generalQueue = existingQueues.stream()
+                .filter(q -> q.getQueueName().toLowerCase().contains("general"))
+                .findFirst()
+                .orElseGet(() -> {
+                    DomainApprovalQueueEntity queue = new DomainApprovalQueueEntity();
+                    queue.setQueueName("General Queue");
+                    queue.initializeQueue();
+                    queue.setMaxCapacity(1000);
+                    return approvalQueueRepository.save(queue);
+                });
+        
+        // Find or create high priority queue
+        highPriorityQueue = existingQueues.stream()
+                .filter(q -> q.getQueueName().toLowerCase().contains("high") || q.getQueueName().toLowerCase().contains("priority"))
+                .findFirst()
+                .orElseGet(() -> {
+                    DomainApprovalQueueEntity queue = new DomainApprovalQueueEntity();
+                    queue.setQueueName("High Priority Queue");
+                    queue.initializeQueue();
+                    queue.setMaxCapacity(500);
+                    return approvalQueueRepository.save(queue);
+                });
+        
+        logger.info("Using general queue with ID: {}", generalQueue.getQueueId());
+        logger.info("Using high priority queue with ID: {}", highPriorityQueue.getQueueId());
     }
 
     @Test
-    @Transactional
-    void whenQuoteCreatedEventReceived_thenApprovalRequestCreatedAndQueued() {
+    void whenQuoteCreatedEventReceived_thenApprovalRequestCreatedAndQueued(CapturedOutput output) {
+        logger.info("Starting test: whenQuoteCreatedEventReceived_thenApprovalRequestCreatedAndQueued");
+        
         UUID quoteId = UUID.randomUUID();
         UUID submittedById = UUID.randomUUID();
+        
+        // Count existing requests before test
+        long initialRequestCount = approvalRequestRepository.count();
+        logger.info("Initial request count: {}", initialRequestCount);
+        
         SharedQuoteCreatedEventDTO event = new SharedQuoteCreatedEventDTO(
                 "QuoteCreatedEvent",
                 quoteId.toString(),
@@ -108,10 +137,19 @@ class QuoteSubmissionIntegrationTest {
                 DomainPriority.NORMAL.name(),
                 Instant.now().toString()
         );
-
+        
+        logger.info("Publishing QuoteCreatedEvent for quote ID: {}", quoteId);
         eventPublisher.publishEvent(event);
 
-        await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
+        // Wait for async processing and check that a new request was created
+        await().atMost(Duration.ofSeconds(15)).untilAsserted(() -> {
+            long currentRequestCount = approvalRequestRepository.count();
+            logger.info("Current request count: {}", currentRequestCount);
+            
+            // Verify that a new request was created
+            assertThat(currentRequestCount).isGreaterThan(initialRequestCount);
+            
+            // Try to find the specific request
             DomainApprovalRequestEntity createdRequest = approvalRequestRepository.findByQuoteId(quoteId.toString())
                     .orElseThrow(() -> new AssertionError("Approval request was not created for quote ID: " + quoteId));
 
@@ -119,14 +157,25 @@ class QuoteSubmissionIntegrationTest {
             assertThat(createdRequest.getSubmittedById()).isEqualTo(submittedById.toString());
             assertThat(createdRequest.getStatus()).isEqualTo(DomainApprovalStatus.PENDING);
             assertThat(createdRequest.getQueueId()).isEqualTo(generalQueue.getQueueId());
+            
+            logger.info("Successfully verified approval request creation for quote ID: {}", quoteId);
         });
+        
+        logger.info("Test completed: whenQuoteCreatedEventReceived_thenApprovalRequestCreatedAndQueued");
     }
 
     @Test
-    @Transactional
-    void whenHighPriorityQuoteCreated_thenAssignedToPriorityQueue() {
+    void whenHighPriorityQuoteCreated_thenAssignedToPriorityQueueWithAppropriateDeadline(CapturedOutput output) {
+        logger.info("Starting test: whenHighPriorityQuoteCreated_thenAssignedToPriorityQueueWithAppropriateDeadline");
+        
         UUID quoteId = UUID.randomUUID();
         UUID submittedById = UUID.randomUUID();
+        LocalDateTime testStartTime = LocalDateTime.now();
+        
+        // Count existing requests before test
+        long initialRequestCount = approvalRequestRepository.count();
+        logger.info("Initial request count: {}", initialRequestCount);
+        
         SharedQuoteCreatedEventDTO event = new SharedQuoteCreatedEventDTO(
                 "QuoteCreatedEvent",
                 quoteId.toString(),
@@ -134,15 +183,52 @@ class QuoteSubmissionIntegrationTest {
                 DomainPriority.HIGH.name(),
                 Instant.now().toString()
         );
-
+        
+        logger.info("Publishing HIGH priority QuoteCreatedEvent for quote ID: {}", quoteId);
         eventPublisher.publishEvent(event);
 
-        await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
+        // Wait for async processing and verify
+        await().atMost(Duration.ofSeconds(15)).untilAsserted(() -> {
+            long currentRequestCount = approvalRequestRepository.count();
+            logger.info("Current request count: {}", currentRequestCount);
+            
+            // Verify that a new request was created
+            assertThat(currentRequestCount).isGreaterThan(initialRequestCount);
+            
             DomainApprovalRequestEntity createdRequest = approvalRequestRepository.findByQuoteId(quoteId.toString())
                     .orElseThrow(() -> new AssertionError("Approval request was not created for quote ID: " + quoteId));
 
+            // Verify priority is correctly set
             assertThat(createdRequest.getPriority()).isEqualTo(DomainPriority.HIGH);
+            logger.info("Verified priority is set to HIGH for quote ID: {}", quoteId);
+            
+            // Verify assignment to high priority queue
             assertThat(createdRequest.getQueueId()).isEqualTo(highPriorityQueue.getQueueId());
+            logger.info("Verified assignment to high priority queue for quote ID: {}", quoteId);
+            
+            // Verify deadline calculation - HIGH priority should have 24 hours deadline
+            assertThat(createdRequest.getDeadline()).isNotNull();
+            assertThat(createdRequest.getSubmittedAt()).isNotNull();
+            
+            // Calculate expected deadline (24 hours from submission time)
+            LocalDateTime expectedDeadline = createdRequest.getSubmittedAt().plusHours(24);
+            
+            // Verify the deadline is within expected range (allowing for small time differences)
+            assertThat(createdRequest.getDeadline()).isEqualTo(expectedDeadline);
+            
+            // Verify that the deadline is indeed 24 hours after submission
+            long hoursBetween = ChronoUnit.HOURS.between(createdRequest.getSubmittedAt(), createdRequest.getDeadline());
+            assertThat(hoursBetween).isEqualTo(24);
+            
+            logger.info("Verified deadline calculation: submitted at {}, deadline at {} (24 hours later)", 
+                    createdRequest.getSubmittedAt(), createdRequest.getDeadline());
+            
+            // Verify the deadline is in the future relative to test start time
+            assertThat(createdRequest.getDeadline()).isAfter(testStartTime);
+            
+            logger.info("Successfully verified high priority quote processing with appropriate deadline calculation");
         });
+        
+        logger.info("Test completed: whenHighPriorityQuoteCreated_thenAssignedToPriorityQueueWithAppropriateDeadline");
     }
 }

@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS approval_requests (
     assigned_at TIMESTAMPTZ,
     deadline TIMESTAMPTZ,
     queue_id UUID,
-    FOREIGN KEY (queue_id) REFERENCES approval_queues(queue_id)
+    FOREIGN KEY (queue_id) REFERENCES approval_queues(queue_id) ON DELETE CASCADE
 );
 
 -- Create approval_decisions table
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS approval_decisions (
     comments TEXT,
     decision_timestamp TIMESTAMPTZ NOT NULL,
     processing_time_ms BIGINT,
-    FOREIGN KEY (approval_request_id) REFERENCES approval_requests(approval_request_id)
+    FOREIGN KEY (approval_request_id) REFERENCES approval_requests(approval_request_id) ON DELETE CASCADE
 );
 
 -- Create approval_audit_logs table
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS approval_audit_logs (
     timestamp TIMESTAMPTZ NOT NULL,
     ip_address VARCHAR(45),
     user_agent TEXT,
-    FOREIGN KEY (approval_request_id) REFERENCES approval_requests(approval_request_id)
+    FOREIGN KEY (approval_request_id) REFERENCES approval_requests(approval_request_id) ON DELETE CASCADE
 );
 
 -- Create moderation_rules table
@@ -74,8 +74,8 @@ CREATE TABLE IF NOT EXISTS approval_request_rule_executions (
     result VARCHAR(50) NOT NULL,
     details TEXT,
     PRIMARY KEY (approval_request_id, rule_id),
-    FOREIGN KEY (approval_request_id) REFERENCES approval_requests(approval_request_id),
-    FOREIGN KEY (rule_id) REFERENCES moderation_rules(rule_id)
+    FOREIGN KEY (approval_request_id) REFERENCES approval_requests(approval_request_id) ON DELETE CASCADE,
+    FOREIGN KEY (rule_id) REFERENCES moderation_rules(rule_id) ON DELETE CASCADE
 );
 
 -- Create indexes for better performance
@@ -86,7 +86,7 @@ CREATE INDEX IF NOT EXISTS idx_approval_decisions_request_id ON approval_decisio
 CREATE INDEX IF NOT EXISTS idx_audit_logs_request_id ON approval_audit_logs(approval_request_id);
 CREATE INDEX IF NOT EXISTS idx_queues_active ON approval_queues(is_active);
 
--- Insert test data
+-- Insert test data (these will be cleaned up per test)
 INSERT INTO approval_queues (queue_id, queue_name, max_capacity, current_size, is_active) VALUES 
 ('550e8400-e29b-41d4-a716-446655440000', 'General Queue', 1000, 0, true),
 ('550e8400-e29b-41d4-a716-446655440001', 'High Priority Queue', 500, 0, true),
