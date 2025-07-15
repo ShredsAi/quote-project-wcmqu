@@ -66,7 +66,7 @@ public class DomainAuditTrailService {
         // Save the audit log
         DomainApprovalAuditLogEntity savedAuditLog = auditLogRepository.save(auditLog);
 
-        log.debug("Recorded audit action '{}' for request {} by user {}", action, requestId, performedById);
+        log.info("Recorded audit action '{}' for request {} by user {} with audit ID {}", action, requestId, performedById, savedAuditLog.getAuditId());
 
         return savedAuditLog;
     }
@@ -116,7 +116,7 @@ public class DomainAuditTrailService {
         // Save the audit log
         DomainApprovalAuditLogEntity savedAuditLog = auditLogRepository.save(auditLog);
 
-        log.debug("Recorded audit action '{}' for request {} by user {} from IP {}", action, requestId, performedById, ipAddress);
+        log.info("Recorded audit action '{}' for request {} by user {} from IP {} with audit ID {}", action, requestId, performedById, ipAddress, savedAuditLog.getAuditId());
 
         return savedAuditLog;
     }
