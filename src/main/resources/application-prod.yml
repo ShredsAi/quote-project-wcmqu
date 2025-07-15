@@ -1,0 +1,49 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/approval_db}
+    username: ${DB_USERNAME:approval_user}
+    password: ${DB_PASSWORD:encrypted}
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+
+logging:
+  level:
+    root: WARN
+    ai.shreds: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.type: WARN
+  file:
+    name: /var/log/approval-workflow/approval-workflow.log
+    max-size: 100MB
+    max-history: 30
+
+approval:
+  business-rules:
+    max-processing-time-hours: 48
+    high-priority-processing-time-hours: 24
+    urgent-processing-time-hours: 12
+    max-queue-capacity: 10000
+    deadline-alert-hours-before: 6
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
