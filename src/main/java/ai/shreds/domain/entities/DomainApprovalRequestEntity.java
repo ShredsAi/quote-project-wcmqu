@@ -132,4 +132,86 @@ public class DomainApprovalRequestEntity {
                 .queueId(queueId)
                 .build();
     }
+    
+    // Explicit getters and setters to use if Lombok doesn't process correctly
+    
+    public String getApprovalRequestId() {
+        return approvalRequestId;
+    }
+    
+    public void setApprovalRequestId(String approvalRequestId) {
+        this.approvalRequestId = approvalRequestId;
+    }
+    
+    public String getQuoteId() {
+        return quoteId;
+    }
+    
+    public void setQuoteId(String quoteId) {
+        this.quoteId = quoteId;
+    }
+    
+    public String getSubmittedById() {
+        return submittedById;
+    }
+    
+    public void setSubmittedById(String submittedById) {
+        this.submittedById = submittedById;
+    }
+    
+    public DomainPriority getPriority() {
+        return priority;
+    }
+    
+    public void setPriority(DomainPriority priority) {
+        this.priority = priority;
+    }
+    
+    public String getAssignedModeratorId() {
+        return assignedModeratorId;
+    }
+    
+    public void setAssignedModeratorId(String assignedModeratorId) {
+        this.assignedModeratorId = assignedModeratorId;
+    }
+    
+    public DomainApprovalStatus getStatus() {
+        return status;
+    }
+    
+    public void setStatus(DomainApprovalStatus status) {
+        this.status = status;
+    }
+    
+    public LocalDateTime getSubmittedAt() {
+        return submittedAt;
+    }
+    
+    public void setSubmittedAt(LocalDateTime submittedAt) {
+        this.submittedAt = submittedAt;
+    }
+    
+    public LocalDateTime getAssignedAt() {
+        return assignedAt;
+    }
+    
+    public void setAssignedAt(LocalDateTime assignedAt) {
+        this.assignedAt = assignedAt;
+    }
+    
+    public LocalDateTime getDeadline() {
+        return deadline;
+    }
+    
+    public void setDeadline(LocalDateTime deadline) {
+        this.deadline = deadline;
+    }
+    
+    public String getQueueId() {
+        return queueId;
+    }
+    
+    public void setQueueId(String queueId) {
+        this.queueId = queueId;
+    }
 }

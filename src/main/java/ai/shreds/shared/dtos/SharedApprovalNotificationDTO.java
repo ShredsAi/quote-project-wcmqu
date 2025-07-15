@@ -23,4 +23,29 @@ public class SharedApprovalNotificationDTO {
     
     @NotBlank
     private String message;
+    
+    // Explicit getters and setters in case Lombok doesn't process
+    public String getType() {
+        return type;
+    }
+    
+    public void setType(String type) {
+        this.type = type;
+    }
+    
+    public String getRecipientId() {
+        return recipientId;
+    }
+    
+    public void setRecipientId(String recipientId) {
+        this.recipientId = recipientId;
+    }
+    
+    public String getMessage() {
+        return message;
+    }
+    
+    public void setMessage(String message) {
+        this.message = message;
+    }
 }

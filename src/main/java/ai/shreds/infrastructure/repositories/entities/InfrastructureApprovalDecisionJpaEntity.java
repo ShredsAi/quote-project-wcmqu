@@ -2,6 +2,7 @@ package ai.shreds.infrastructure.repositories.entities;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.*;
 import ai.shreds.domain.entities.DomainApprovalDecisionEntity;
 import ai.shreds.domain.value_objects.DomainDecisionType;
@@ -16,13 +17,13 @@ public class InfrastructureApprovalDecisionJpaEntity {
 
     @Id
     @Column(name = "decision_id", nullable = false, updatable = false)
-    private String decisionId;
+    private UUID decisionId;
 
     @Column(name = "approval_request_id", nullable = false)
-    private String approvalRequestId;
+    private UUID approvalRequestId;
 
     @Column(name = "moderator_id", nullable = false)
-    private String moderatorId;
+    private UUID moderatorId;
 
     @Column(name = "decision", nullable = false)
     private String decision;
@@ -41,9 +42,9 @@ public class InfrastructureApprovalDecisionJpaEntity {
 
     public DomainApprovalDecisionEntity toDomainEntity() {
         DomainApprovalDecisionEntity domain = new DomainApprovalDecisionEntity();
-        domain.setDecisionId(this.decisionId);
-        domain.setApprovalRequestId(this.approvalRequestId);
-        domain.setModeratorId(this.moderatorId);
+        domain.setDecisionId(this.decisionId != null ? this.decisionId.toString() : null);
+        domain.setApprovalRequestId(this.approvalRequestId != null ? this.approvalRequestId.toString() : null);
+        domain.setModeratorId(this.moderatorId != null ? this.moderatorId.toString() : null);
         domain.setDecision(DomainDecisionType.valueOf(this.decision));
         domain.setReason(this.reason);
         domain.setComments(this.comments);
@@ -57,9 +58,9 @@ public class InfrastructureApprovalDecisionJpaEntity {
             return null;
         }
         return InfrastructureApprovalDecisionJpaEntity.builder()
-            .decisionId(domain.getDecisionId())
-            .approvalRequestId(domain.getApprovalRequestId())
-            .moderatorId(domain.getModeratorId())
+            .decisionId(domain.getDecisionId() != null ? UUID.fromString(domain.getDecisionId()) : UUID.randomUUID())
+            .approvalRequestId(domain.getApprovalRequestId() != null ? UUID.fromString(domain.getApprovalRequestId()) : null)
+            .moderatorId(domain.getModeratorId() != null ? UUID.fromString(domain.getModeratorId()) : null)
             .decision(domain.getDecision().name())
             .reason(domain.getReason())
             .comments(domain.getComments())

@@ -8,6 +8,7 @@ import ai.shreds.domain.value_objects.DomainRuleSeverity;
 import ai.shreds.domain.value_objects.DomainRuleType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
  * Domain service for executing business rules against approval requests.
  * This service implements the configurable validation engine for quote approval criteria.
  */
+@Service
 @Slf4j
 @RequiredArgsConstructor
 public class DomainBusinessRulesEngine {
@@ -346,7 +348,7 @@ public class DomainBusinessRulesEngine {
         }
         
         // Check for excessive punctuation
-        long punctuationCount = content.chars().filter(ch -> "!@#$%^&*()_+-=[]{}|;':,.<>?".indexOf(ch) >= 0).count();
+        long punctuationCount = content.chars().filter(ch -> "!@#$%^&*()_+-=[]{};':,.<>?".indexOf(ch) >= 0).count();
         if (punctuationCount > content.length() * 0.1) {
             score -= 0.2; // Too much punctuation
         }

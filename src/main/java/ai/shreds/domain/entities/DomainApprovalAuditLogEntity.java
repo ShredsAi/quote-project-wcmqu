@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ai.shreds.shared.dtos.SharedApprovalAuditLogDTO;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -156,5 +157,98 @@ public class DomainApprovalAuditLogEntity {
      */
     public String getFormattedTimestamp() {
         return timestamp != null ? timestamp.format(DATE_FORMATTER) : null;
+    }
+    
+    /**
+     * Converts this entity to a DTO for external communication.
+     * 
+     * @return a DTO representing this entity
+     */
+    public SharedApprovalAuditLogDTO toDTO() {
+        return SharedApprovalAuditLogDTO.builder()
+                .auditId(auditId)
+                .approvalRequestId(approvalRequestId)
+                .action(action)
+                .performedById(performedById)
+                .oldValue(oldValue)
+                .newValue(newValue)
+                .timestamp(timestamp != null ? timestamp.format(DATE_FORMATTER) : null)
+                .ipAddress(ipAddress)
+                .userAgent(userAgent)
+                .build();
+    }
+    
+    // Explicit getters and setters to use if Lombok doesn't process correctly
+    
+    public String getAuditId() {
+        return auditId;
+    }
+    
+    public void setAuditId(String auditId) {
+        this.auditId = auditId;
+    }
+    
+    public String getApprovalRequestId() {
+        return approvalRequestId;
+    }
+    
+    public void setApprovalRequestId(String approvalRequestId) {
+        this.approvalRequestId = approvalRequestId;
+    }
+    
+    public String getAction() {
+        return action;
+    }
+    
+    public void setAction(String action) {
+        this.action = action;
+    }
+    
+    public String getPerformedById() {
+        return performedById;
+    }
+    
+    public void setPerformedById(String performedById) {
+        this.performedById = performedById;
+    }
+    
+    public String getOldValue() {
+        return oldValue;
+    }
+    
+    public void setOldValue(String oldValue) {
+        this.oldValue = oldValue;
+    }
+    
+    public String getNewValue() {
+        return newValue;
+    }
+    
+    public void setNewValue(String newValue) {
+        this.newValue = newValue;
+    }
+    
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+    
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
+    
+    public String getIpAddress() {
+        return ipAddress;
+    }
+    
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
+    }
+    
+    public String getUserAgent() {
+        return userAgent;
+    }
+    
+    public void setUserAgent(String userAgent) {
+        this.userAgent = userAgent;
     }
 }

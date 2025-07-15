@@ -93,6 +93,12 @@ public interface DomainOutputPortApprovalDecisionRepository {
     void deleteById(String decisionId);
     
     /**
+     * Deletes all approval decisions from the repository.
+     * This method is typically used for testing purposes.
+     */
+    void deleteAll();
+    
+    /**
      * Counts the total number of approval decisions.
      * 
      * @return the total count of approval decisions

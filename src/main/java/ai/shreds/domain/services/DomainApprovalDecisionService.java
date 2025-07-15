@@ -11,6 +11,7 @@ import ai.shreds.domain.value_objects.DomainApprovalStatus;
 import ai.shreds.domain.value_objects.DomainDecisionType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -22,6 +23,7 @@ import java.util.UUID;
  * Domain service for handling approval and rejection decisions.
  * This service contains the core business logic for processing moderator decisions.
  */
+@Service
 @Slf4j
 @RequiredArgsConstructor
 public class DomainApprovalDecisionService {

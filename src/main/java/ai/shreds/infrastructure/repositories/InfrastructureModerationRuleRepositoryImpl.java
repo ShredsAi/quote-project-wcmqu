@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Repository
@@ -55,7 +56,7 @@ public class InfrastructureModerationRuleRepositoryImpl implements DomainOutputP
             
             log.debug("Finding moderation rule by ID: {}", ruleId);
             
-            return jpaRepository.findById(ruleId)
+            return jpaRepository.findById(UUID.fromString(ruleId))
                     .map(entityMapper::toModerationRuleDomain);
         } catch (Exception e) {
             log.error("Error finding moderation rule with ID: {}", ruleId, e);
@@ -188,7 +189,7 @@ public class InfrastructureModerationRuleRepositoryImpl implements DomainOutputP
             log.debug("Updating moderation rule with ID: {}", rule.getRuleId());
             
             // Check if entity exists
-            if (!jpaRepository.existsById(rule.getRuleId())) {
+            if (!jpaRepository.existsById(UUID.fromString(rule.getRuleId()))) {
                 log.error("Moderation rule not found for update with ID: {}", rule.getRuleId());
                 throw new InfrastructureRepositoryException("Moderation rule not found for update");
             }
@@ -232,7 +233,7 @@ public class InfrastructureModerationRuleRepositoryImpl implements DomainOutputP
             
             log.debug("Deleting moderation rule with ID: {}", ruleId);
             
-            jpaRepository.deleteById(ruleId);
+            jpaRepository.deleteById(UUID.fromString(ruleId));
             
             log.debug("Successfully deleted moderation rule with ID: {}", ruleId);
         } catch (Exception e) {

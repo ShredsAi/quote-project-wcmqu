@@ -6,6 +6,9 @@ package ai.shreds.domain.exceptions;
  */
 public class DomainModeratorNotAuthorizedException extends RuntimeException {
     
+    private final String moderatorId;
+    private final String requestId;
+    
     /**
      * Creates a new exception with details about the unauthorized moderator and request.
      * 
@@ -14,16 +17,8 @@ public class DomainModeratorNotAuthorizedException extends RuntimeException {
      */
     public DomainModeratorNotAuthorizedException(String moderatorId, String requestId) {
         super(String.format("Moderator %s is not authorized to process request %s", moderatorId, requestId));
-    }
-    
-    /**
-     * Creates a new exception with details about the unauthorized moderator and action.
-     * 
-     * @param moderatorId the ID of the moderator who attempted the action
-     * @param action the action they tried to perform
-     */
-    public DomainModeratorNotAuthorizedException(String moderatorId, String action) {
-        super(String.format("Moderator %s is not authorized to perform action: %s", moderatorId, action));
+        this.moderatorId = moderatorId;
+        this.requestId = requestId;
     }
     
     /**
@@ -33,6 +28,8 @@ public class DomainModeratorNotAuthorizedException extends RuntimeException {
      */
     public DomainModeratorNotAuthorizedException(String message) {
         super(message);
+        this.moderatorId = null;
+        this.requestId = null;
     }
     
     /**
@@ -43,5 +40,34 @@ public class DomainModeratorNotAuthorizedException extends RuntimeException {
      */
     public DomainModeratorNotAuthorizedException(String message, Throwable cause) {
         super(message, cause);
+        this.moderatorId = null;
+        this.requestId = null;
+    }
+    
+    /**
+     * Gets the moderator ID.
+     * 
+     * @return the moderator ID
+     */
+    public String getModeratorId() {
+        return moderatorId;
+    }
+    
+    /**
+     * Gets the request ID.
+     * 
+     * @return the request ID
+     */
+    public String getRequestId() {
+        return requestId;
+    }
+    
+    /**
+     * Gets the error code.
+     * 
+     * @return the error code
+     */
+    public String getErrorCode() {
+        return "MODERATOR_NOT_AUTHORIZED";
     }
 }

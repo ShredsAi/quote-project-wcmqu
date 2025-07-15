@@ -9,13 +9,14 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * JPA repository interface for approval audit log entities.
  * Provides data access operations for audit logs.
  */
 @Repository
-public interface InfrastructureApprovalAuditLogJpaRepository extends JpaRepository<InfrastructureApprovalAuditLogJpaEntity, String> {
+public interface InfrastructureApprovalAuditLogJpaRepository extends JpaRepository<InfrastructureApprovalAuditLogJpaEntity, UUID> {
     
     /**
      * Finds audit logs by approval request ID, ordered by timestamp ascending.
@@ -23,7 +24,7 @@ public interface InfrastructureApprovalAuditLogJpaRepository extends JpaReposito
      * @param approvalRequestId the approval request ID to filter by
      * @return list of audit logs for the request, ordered by timestamp
      */
-    List<InfrastructureApprovalAuditLogJpaEntity> findByApprovalRequestIdOrderByTimestampAsc(String approvalRequestId);
+    List<InfrastructureApprovalAuditLogJpaEntity> findByApprovalRequestIdOrderByTimestampAsc(UUID approvalRequestId);
     
     /**
      * Finds audit logs by approval request ID, ordered by timestamp descending.
@@ -31,7 +32,7 @@ public interface InfrastructureApprovalAuditLogJpaRepository extends JpaReposito
      * @param approvalRequestId the approval request ID to filter by
      * @return list of audit logs for the request, ordered by timestamp descending
      */
-    List<InfrastructureApprovalAuditLogJpaEntity> findByApprovalRequestIdOrderByTimestampDesc(String approvalRequestId);
+    List<InfrastructureApprovalAuditLogJpaEntity> findByApprovalRequestIdOrderByTimestampDesc(UUID approvalRequestId);
     
     /**
      * Finds audit logs by performed by ID.
@@ -39,7 +40,7 @@ public interface InfrastructureApprovalAuditLogJpaRepository extends JpaReposito
      * @param performedById the ID of the user who performed the actions
      * @return list of audit logs performed by the user
      */
-    List<InfrastructureApprovalAuditLogJpaEntity> findByPerformedById(String performedById);
+    List<InfrastructureApprovalAuditLogJpaEntity> findByPerformedById(UUID performedById);
     
     /**
      * Finds audit logs by action type.
@@ -66,7 +67,7 @@ public interface InfrastructureApprovalAuditLogJpaRepository extends JpaReposito
      * @param endTime the end of the time range
      * @return list of audit logs for the request within the time range
      */
-    List<InfrastructureApprovalAuditLogJpaEntity> findByApprovalRequestIdAndTimestampBetween(String approvalRequestId, LocalDateTime startTime, LocalDateTime endTime);
+    List<InfrastructureApprovalAuditLogJpaEntity> findByApprovalRequestIdAndTimestampBetween(UUID approvalRequestId, LocalDateTime startTime, LocalDateTime endTime);
     
     /**
      * Finds audit logs by IP address.
@@ -83,7 +84,7 @@ public interface InfrastructureApprovalAuditLogJpaRepository extends JpaReposito
      * @param action the action type
      * @return list of audit logs for the request and action type
      */
-    List<InfrastructureApprovalAuditLogJpaEntity> findByApprovalRequestIdAndAction(String approvalRequestId, String action);
+    List<InfrastructureApprovalAuditLogJpaEntity> findByApprovalRequestIdAndAction(UUID approvalRequestId, String action);
     
     /**
      * Finds the most recent audit log for a specific approval request.
@@ -92,7 +93,7 @@ public interface InfrastructureApprovalAuditLogJpaRepository extends JpaReposito
      * @return the most recent audit log for the request if found
      */
     @Query("SELECT a FROM InfrastructureApprovalAuditLogJpaEntity a WHERE a.approvalRequestId = :approvalRequestId ORDER BY a.timestamp DESC LIMIT 1")
-    Optional<InfrastructureApprovalAuditLogJpaEntity> findMostRecentByApprovalRequestId(@Param("approvalRequestId") String approvalRequestId);
+    Optional<InfrastructureApprovalAuditLogJpaEntity> findMostRecentByApprovalRequestId(@Param("approvalRequestId") UUID approvalRequestId);
     
     /**
      * Counts audit logs by approval request ID.
@@ -100,7 +101,7 @@ public interface InfrastructureApprovalAuditLogJpaRepository extends JpaReposito
      * @param approvalRequestId the approval request ID
      * @return the count of audit logs for the request
      */
-    long countByApprovalRequestId(String approvalRequestId);
+    long countByApprovalRequestId(UUID approvalRequestId);
     
     /**
      * Counts audit logs by action type.

@@ -3,6 +3,7 @@ package ai.shreds.infrastructure.repositories.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import ai.shreds.domain.entities.DomainApprovalAuditLogEntity;
 
 @Data
@@ -15,16 +16,16 @@ public class InfrastructureApprovalAuditLogJpaEntity {
 
     @Id
     @Column(name = "audit_id", nullable = false, updatable = false)
-    private String auditId;
+    private UUID auditId;
 
     @Column(name = "approval_request_id", nullable = false)
-    private String approvalRequestId;
+    private UUID approvalRequestId;
 
     @Column(name = "action", nullable = false)
     private String action;
 
     @Column(name = "performed_by_id", nullable = false)
-    private String performedById;
+    private UUID performedById;
 
     @Column(name = "old_value")
     private String oldValue;
@@ -43,10 +44,10 @@ public class InfrastructureApprovalAuditLogJpaEntity {
 
     public DomainApprovalAuditLogEntity toDomainEntity() {
         DomainApprovalAuditLogEntity domain = new DomainApprovalAuditLogEntity();
-        domain.setAuditId(this.auditId);
-        domain.setApprovalRequestId(this.approvalRequestId);
+        domain.setAuditId(this.auditId != null ? this.auditId.toString() : null);
+        domain.setApprovalRequestId(this.approvalRequestId != null ? this.approvalRequestId.toString() : null);
         domain.setAction(this.action);
-        domain.setPerformedById(this.performedById);
+        domain.setPerformedById(this.performedById != null ? this.performedById.toString() : null);
         domain.setOldValue(this.oldValue);
         domain.setNewValue(this.newValue);
         domain.setTimestamp(this.timestamp);
@@ -60,10 +61,10 @@ public class InfrastructureApprovalAuditLogJpaEntity {
             return null;
         }
         return InfrastructureApprovalAuditLogJpaEntity.builder()
-                .auditId(domain.getAuditId())
-                .approvalRequestId(domain.getApprovalRequestId())
+                .auditId(domain.getAuditId() != null ? UUID.fromString(domain.getAuditId()) : UUID.randomUUID())
+                .approvalRequestId(domain.getApprovalRequestId() != null ? UUID.fromString(domain.getApprovalRequestId()) : null)
                 .action(domain.getAction())
-                .performedById(domain.getPerformedById())
+                .performedById(domain.getPerformedById() != null ? UUID.fromString(domain.getPerformedById()) : null)
                 .oldValue(domain.getOldValue())
                 .newValue(domain.getNewValue())
                 .timestamp(domain.getTimestamp())

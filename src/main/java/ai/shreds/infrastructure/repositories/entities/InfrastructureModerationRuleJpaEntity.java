@@ -3,6 +3,7 @@ package ai.shreds.infrastructure.repositories.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import ai.shreds.domain.entities.DomainModerationRuleEntity;
 import ai.shreds.domain.value_objects.DomainRuleType;
 import ai.shreds.domain.value_objects.DomainRuleSeverity;
@@ -17,7 +18,7 @@ public class InfrastructureModerationRuleJpaEntity {
 
     @Id
     @Column(name = "rule_id", nullable = false, updatable = false)
-    private String ruleId;
+    private UUID ruleId;
 
     @Column(name = "rule_name", nullable = false, unique = true)
     private String ruleName;
@@ -42,7 +43,7 @@ public class InfrastructureModerationRuleJpaEntity {
 
     public DomainModerationRuleEntity toDomainEntity() {
         DomainModerationRuleEntity domain = new DomainModerationRuleEntity();
-        domain.setRuleId(this.ruleId);
+        domain.setRuleId(this.ruleId != null ? this.ruleId.toString() : null);
         domain.setRuleName(this.ruleName);
         domain.setRuleType(DomainRuleType.valueOf(this.ruleType));
         domain.setDescription(this.description);
@@ -58,7 +59,7 @@ public class InfrastructureModerationRuleJpaEntity {
             return null;
         }
         return InfrastructureModerationRuleJpaEntity.builder()
-                .ruleId(domain.getRuleId())
+                .ruleId(domain.getRuleId() != null ? UUID.fromString(domain.getRuleId()) : UUID.randomUUID())
                 .ruleName(domain.getRuleName())
                 .ruleType(domain.getRuleType().name())
                 .description(domain.getDescription())

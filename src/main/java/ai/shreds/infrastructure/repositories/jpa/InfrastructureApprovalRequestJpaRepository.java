@@ -8,13 +8,14 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * JPA repository interface for approval request entities.
  * Provides data access operations for approval requests.
  */
 @Repository
-public interface InfrastructureApprovalRequestJpaRepository extends JpaRepository<InfrastructureApprovalRequestJpaEntity, String> {
+public interface InfrastructureApprovalRequestJpaRepository extends JpaRepository<InfrastructureApprovalRequestJpaEntity, UUID> {
     
     /**
      * Finds approval requests by status.
@@ -30,7 +31,7 @@ public interface InfrastructureApprovalRequestJpaRepository extends JpaRepositor
      * @param moderatorId the moderator ID to filter by
      * @return list of approval requests assigned to the moderator
      */
-    List<InfrastructureApprovalRequestJpaEntity> findByAssignedModeratorId(String moderatorId);
+    List<InfrastructureApprovalRequestJpaEntity> findByAssignedModeratorId(UUID moderatorId);
     
     /**
      * Finds approval requests by priority and status.
@@ -47,7 +48,7 @@ public interface InfrastructureApprovalRequestJpaRepository extends JpaRepositor
      * @param quoteId the quote ID to search for
      * @return the approval request for the quote if found
      */
-    Optional<InfrastructureApprovalRequestJpaEntity> findByQuoteId(String quoteId);
+    Optional<InfrastructureApprovalRequestJpaEntity> findByQuoteId(UUID quoteId);
     
     /**
      * Finds approval requests by priority.
@@ -63,7 +64,7 @@ public interface InfrastructureApprovalRequestJpaRepository extends JpaRepositor
      * @param queueId the queue ID to filter by
      * @return list of approval requests in the specified queue
      */
-    List<InfrastructureApprovalRequestJpaEntity> findByQueueId(String queueId);
+    List<InfrastructureApprovalRequestJpaEntity> findByQueueId(UUID queueId);
     
     /**
      * Checks if an approval request exists for a given quote ID.
@@ -71,7 +72,7 @@ public interface InfrastructureApprovalRequestJpaRepository extends JpaRepositor
      * @param quoteId the quote ID to check
      * @return true if an approval request exists for the quote
      */
-    boolean existsByQuoteId(String quoteId);
+    boolean existsByQuoteId(UUID quoteId);
     
     /**
      * Counts approval requests by status.
@@ -98,6 +99,6 @@ public interface InfrastructureApprovalRequestJpaRepository extends JpaRepositor
     List<InfrastructureApprovalRequestJpaEntity> findByFilters(
             @Param("status") String status,
             @Param("priority") String priority,
-            @Param("moderatorId") String moderatorId,
-            @Param("queueId") String queueId);
+            @Param("moderatorId") UUID moderatorId,
+            @Param("queueId") UUID queueId);
 }

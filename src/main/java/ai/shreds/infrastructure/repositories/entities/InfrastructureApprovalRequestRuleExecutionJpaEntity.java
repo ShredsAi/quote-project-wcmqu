@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * JPA entity representing the execution of moderation rules on approval requests.
@@ -29,14 +30,14 @@ public class InfrastructureApprovalRequestRuleExecutionJpaEntity {
      */
     @Id
     @Column(name = "approval_request_id", nullable = false)
-    private String approvalRequestId;
+    private UUID approvalRequestId;
 
     /**
      * The ID of the moderation rule that was executed.
      */
     @Id
     @Column(name = "rule_id", nullable = false)
-    private String ruleId;
+    private UUID ruleId;
 
     /**
      * The timestamp when the rule was executed.
@@ -126,8 +127,8 @@ public class InfrastructureApprovalRequestRuleExecutionJpaEntity {
      * @return true if the entity is valid, false otherwise
      */
     public boolean isValid() {
-        return approvalRequestId != null && !approvalRequestId.trim().isEmpty() &&
-               ruleId != null && !ruleId.trim().isEmpty() &&
+        return approvalRequestId != null &&
+               ruleId != null &&
                executionTimestamp != null &&
                result != null && !result.trim().isEmpty();
     }
@@ -149,12 +150,12 @@ class InfrastructureApprovalRequestRuleExecutionId implements Serializable {
     /**
      * The approval request ID part of the composite key.
      */
-    private String approvalRequestId;
+    private UUID approvalRequestId;
     
     /**
      * The rule ID part of the composite key.
      */
-    private String ruleId;
+    private UUID ruleId;
 
     /**
      * Validates the composite key.
@@ -162,8 +163,7 @@ class InfrastructureApprovalRequestRuleExecutionId implements Serializable {
      * @return true if the key is valid, false otherwise
      */
     public boolean isValid() {
-        return approvalRequestId != null && !approvalRequestId.trim().isEmpty() &&
-               ruleId != null && !ruleId.trim().isEmpty();
+        return approvalRequestId != null && ruleId != null;
     }
 
     /**

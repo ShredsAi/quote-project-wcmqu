@@ -3,6 +3,7 @@ package ai.shreds.infrastructure.repositories.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import ai.shreds.domain.entities.DomainApprovalQueueEntity;
 
 @Data
@@ -15,7 +16,7 @@ public class InfrastructureApprovalQueueJpaEntity {
 
     @Id
     @Column(name = "queue_id", nullable = false, updatable = false)
-    private String queueId;
+    private UUID queueId;
 
     @Column(name = "queue_name", nullable = false, unique = true)
     private String queueName;
@@ -37,7 +38,7 @@ public class InfrastructureApprovalQueueJpaEntity {
 
     public DomainApprovalQueueEntity toDomainEntity() {
         DomainApprovalQueueEntity domain = new DomainApprovalQueueEntity();
-        domain.setQueueId(this.queueId);
+        domain.setQueueId(this.queueId != null ? this.queueId.toString() : null);
         domain.setQueueName(this.queueName);
         domain.setMaxCapacity(this.maxCapacity);
         domain.setCurrentSize(this.currentSize);
@@ -52,7 +53,7 @@ public class InfrastructureApprovalQueueJpaEntity {
             return null;
         }
         return InfrastructureApprovalQueueJpaEntity.builder()
-                .queueId(domain.getQueueId())
+                .queueId(domain.getQueueId() != null ? UUID.fromString(domain.getQueueId()) : UUID.randomUUID())
                 .queueName(domain.getQueueName())
                 .maxCapacity(domain.getMaxCapacity())
                 .currentSize(domain.getCurrentSize())

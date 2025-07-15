@@ -2,6 +2,7 @@ package ai.shreds.domain.services;
 
 import ai.shreds.shared.dtos.SharedApprovalNotificationDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -12,6 +13,7 @@ import java.util.Map;
  * Domain service for handling notification triggering for approval workflow events.
  * This service creates notification objects that are sent to stakeholders via message queues.
  */
+@Service
 @Slf4j
 public class DomainNotificationDispatcher {
     

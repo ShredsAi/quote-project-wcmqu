@@ -9,13 +9,14 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * JPA repository interface for approval queue entities.
  * Provides data access operations for approval queues.
  */
 @Repository
-public interface InfrastructureApprovalQueueJpaRepository extends JpaRepository<InfrastructureApprovalQueueJpaEntity, String> {
+public interface InfrastructureApprovalQueueJpaRepository extends JpaRepository<InfrastructureApprovalQueueJpaEntity, UUID> {
     
     /**
      * Finds all active approval queues.

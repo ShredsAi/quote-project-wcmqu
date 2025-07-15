@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Repository
@@ -56,7 +57,7 @@ public class InfrastructureApprovalRequestRepositoryImpl implements DomainOutput
             
             log.debug("Finding approval request by ID: {}", requestId);
             
-            return jpaRepository.findById(requestId)
+            return jpaRepository.findById(UUID.fromString(requestId))
                     .map(entityMapper::toApprovalRequestDomain);
         } catch (Exception e) {
             log.error("Error finding approval request with ID: {}", requestId, e);
@@ -79,8 +80,11 @@ public class InfrastructureApprovalRequestRepositoryImpl implements DomainOutput
             String moderatorId = (String) filter.get("moderatorId");
             String queueId = (String) filter.get("queueId");
             
+            UUID moderatorUUID = moderatorId != null ? UUID.fromString(moderatorId) : null;
+            UUID queueUUID = queueId != null ? UUID.fromString(queueId) : null;
+            
             List<InfrastructureApprovalRequestJpaEntity> jpaEntities = jpaRepository.findByFilters(
-                status, priority, moderatorId, queueId
+                status, priority, moderatorUUID, queueUUID
             );
             
             List<DomainApprovalRequestEntity> result = entityMapper.toApprovalRequestDomainList(jpaEntities);
@@ -103,7 +107,7 @@ public class InfrastructureApprovalRequestRepositoryImpl implements DomainOutput
             log.debug("Updating approval request with ID: {}", request.getApprovalRequestId());
             
             // Check if entity exists
-            if (!jpaRepository.existsById(request.getApprovalRequestId())) {
+            if (!jpaRepository.existsById(UUID.fromString(request.getApprovalRequestId()))) {
                 log.error("Approval request not found for update with ID: {}", request.getApprovalRequestId());
                 throw new InfrastructureRepositoryException("Approval request not found for update");
             }
@@ -152,7 +156,7 @@ public class InfrastructureApprovalRequestRepositoryImpl implements DomainOutput
             
             log.debug("Finding approval requests by moderator ID: {}", moderatorId);
             
-            List<InfrastructureApprovalRequestJpaEntity> jpaEntities = jpaRepository.findByAssignedModeratorId(moderatorId);
+            List<InfrastructureApprovalRequestJpaEntity> jpaEntities = jpaRepository.findByAssignedModeratorId(UUID.fromString(moderatorId));
             List<DomainApprovalRequestEntity> result = entityMapper.toApprovalRequestDomainList(jpaEntities);
             
             log.debug("Found {} requests assigned to moderator: {}", result.size(), moderatorId);
@@ -173,7 +177,7 @@ public class InfrastructureApprovalRequestRepositoryImpl implements DomainOutput
             
             log.debug("Finding approval request by quote ID: {}", quoteId);
             
-            return jpaRepository.findByQuoteId(quoteId)
+            return jpaRepository.findByQuoteId(UUID.fromString(quoteId))
                     .map(entityMapper::toApprovalRequestDomain);
         } catch (Exception e) {
             log.error("Error finding approval request with quote ID: {}", quoteId, e);
@@ -212,7 +216,7 @@ public class InfrastructureApprovalRequestRepositoryImpl implements DomainOutput
             
             log.debug("Finding approval requests by queue ID: {}", queueId);
             
-            List<InfrastructureApprovalRequestJpaEntity> jpaEntities = jpaRepository.findByQueueId(queueId);
+            List<InfrastructureApprovalRequestJpaEntity> jpaEntities = jpaRepository.findByQueueId(UUID.fromString(queueId));
             List<DomainApprovalRequestEntity> result = entityMapper.toApprovalRequestDomainList(jpaEntities);
             
             log.debug("Found {} requests in queue: {}", result.size(), queueId);
@@ -233,7 +237,7 @@ public class InfrastructureApprovalRequestRepositoryImpl implements DomainOutput
             
             log.debug("Checking existence of approval request by quote ID: {}", quoteId);
             
-            return jpaRepository.existsByQuoteId(quoteId);
+            return jpaRepository.existsByQuoteId(UUID.fromString(quoteId));
         } catch (Exception e) {
             log.error("Error checking existence of approval request by quote ID: {}", quoteId, e);
             throw new InfrastructureRepositoryException("Failed to check existence by quote ID", e);
@@ -249,12 +253,26 @@ public class InfrastructureApprovalRequestRepositoryImpl implements DomainOutput
             
             log.debug("Deleting approval request with ID: {}", requestId);
             
-            jpaRepository.deleteById(requestId);
+            jpaRepository.deleteById(UUID.fromString(requestId));
             
             log.debug("Successfully deleted approval request with ID: {}", requestId);
         } catch (Exception e) {
             log.error("Error deleting approval request with ID: {}", requestId, e);
             throw new InfrastructureRepositoryException("Failed to delete approval request", e);
+        }
+    }
+
+    @Override
+    public void deleteAll() {
+        try {
+            log.debug("Deleting all approval requests");
+            
+            jpaRepository.deleteAll();
+            
+            log.debug("Successfully deleted all approval requests");
+        } catch (Exception e) {
+            log.error("Error deleting all approval requests", e);
+            throw new InfrastructureRepositoryException("Failed to delete all approval requests", e);
         }
     }
 

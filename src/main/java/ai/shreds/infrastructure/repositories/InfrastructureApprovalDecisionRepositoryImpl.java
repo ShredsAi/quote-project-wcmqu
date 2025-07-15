@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Repository
@@ -55,7 +56,7 @@ public class InfrastructureApprovalDecisionRepositoryImpl implements DomainOutpu
             
             log.debug("Finding approval decision by ID: {}", decisionId);
             
-            return jpaRepository.findById(decisionId)
+            return jpaRepository.findById(UUID.fromString(decisionId))
                     .map(entityMapper::toApprovalDecisionDomain);
         } catch (Exception e) {
             log.error("Error finding approval decision by ID: {}", decisionId, e);
@@ -73,7 +74,7 @@ public class InfrastructureApprovalDecisionRepositoryImpl implements DomainOutpu
             
             log.debug("Finding approval decisions by request ID: {}", requestId);
             
-            List<InfrastructureApprovalDecisionJpaEntity> jpaEntities = jpaRepository.findByApprovalRequestId(requestId);
+            List<InfrastructureApprovalDecisionJpaEntity> jpaEntities = jpaRepository.findByApprovalRequestId(UUID.fromString(requestId));
             List<DomainApprovalDecisionEntity> result = entityMapper.toApprovalDecisionDomainList(jpaEntities);
             
             log.debug("Found {} decisions for request ID: {}", result.size(), requestId);
@@ -94,7 +95,7 @@ public class InfrastructureApprovalDecisionRepositoryImpl implements DomainOutpu
             
             log.debug("Finding approval decisions by moderator ID: {}", moderatorId);
             
-            List<InfrastructureApprovalDecisionJpaEntity> jpaEntities = jpaRepository.findByModeratorId(moderatorId);
+            List<InfrastructureApprovalDecisionJpaEntity> jpaEntities = jpaRepository.findByModeratorId(UUID.fromString(moderatorId));
             List<DomainApprovalDecisionEntity> result = entityMapper.toApprovalDecisionDomainList(jpaEntities);
             
             log.debug("Found {} decisions by moderator ID: {}", result.size(), moderatorId);
@@ -136,7 +137,7 @@ public class InfrastructureApprovalDecisionRepositoryImpl implements DomainOutpu
             
             log.debug("Finding latest decision for request ID: {}", requestId);
             
-            return jpaRepository.findLatestByApprovalRequestId(requestId)
+            return jpaRepository.findLatestByApprovalRequestId(UUID.fromString(requestId))
                     .map(entityMapper::toApprovalDecisionDomain);
         } catch (Exception e) {
             log.error("Error finding latest decision for request ID: {}", requestId, e);
@@ -154,7 +155,7 @@ public class InfrastructureApprovalDecisionRepositoryImpl implements DomainOutpu
             log.debug("Updating approval decision with ID: {}", decision.getDecisionId());
             
             // Check if entity exists
-            if (!jpaRepository.existsById(decision.getDecisionId())) {
+            if (!jpaRepository.existsById(UUID.fromString(decision.getDecisionId()))) {
                 log.error("Approval decision not found for update with ID: {}", decision.getDecisionId());
                 throw new InfrastructureRepositoryException("Approval decision not found for update");
             }
@@ -182,7 +183,7 @@ public class InfrastructureApprovalDecisionRepositoryImpl implements DomainOutpu
             
             log.debug("Checking existence of decision for request ID: {}", requestId);
             
-            return jpaRepository.existsByApprovalRequestId(requestId);
+            return jpaRepository.existsByApprovalRequestId(UUID.fromString(requestId));
         } catch (Exception e) {
             log.error("Error checking existence of decision for request ID: {}", requestId, e);
             throw new InfrastructureRepositoryException("Failed to check existence by request ID", e);
@@ -198,12 +199,26 @@ public class InfrastructureApprovalDecisionRepositoryImpl implements DomainOutpu
             
             log.debug("Deleting approval decision with ID: {}", decisionId);
             
-            jpaRepository.deleteById(decisionId);
+            jpaRepository.deleteById(UUID.fromString(decisionId));
             
             log.debug("Successfully deleted approval decision with ID: {}", decisionId);
         } catch (Exception e) {
             log.error("Error deleting approval decision with ID: {}", decisionId, e);
             throw new InfrastructureRepositoryException("Failed to delete approval decision", e);
+        }
+    }
+
+    @Override
+    public void deleteAll() {
+        try {
+            log.debug("Deleting all approval decisions");
+            
+            jpaRepository.deleteAll();
+            
+            log.debug("Successfully deleted all approval decisions");
+        } catch (Exception e) {
+            log.error("Error deleting all approval decisions", e);
+            throw new InfrastructureRepositoryException("Failed to delete all approval decisions", e);
         }
     }
 
@@ -247,7 +262,7 @@ public class InfrastructureApprovalDecisionRepositoryImpl implements DomainOutpu
             
             log.debug("Counting approval decisions by moderator ID: {}", moderatorId);
             
-            return jpaRepository.countByModeratorId(moderatorId);
+            return jpaRepository.countByModeratorId(UUID.fromString(moderatorId));
         } catch (Exception e) {
             log.error("Error counting approval decisions by moderator ID: {}", moderatorId, e);
             throw new InfrastructureRepositoryException("Failed to count approval decisions by moderator ID", e);

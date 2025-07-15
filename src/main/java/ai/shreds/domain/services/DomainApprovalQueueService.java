@@ -8,6 +8,7 @@ import ai.shreds.domain.value_objects.DomainApprovalStatus;
 import ai.shreds.domain.value_objects.DomainPriority;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
  * Domain service for managing approval queue operations and load balancing.
  * This service contains the core business logic for queue management.
  */
+@Service
 @Slf4j
 @RequiredArgsConstructor
 public class DomainApprovalQueueService {
@@ -63,7 +65,7 @@ public class DomainApprovalQueueService {
         request.setQueueId(updatedQueue.getQueueId());
         requestRepository.update(request);
         
-        log.info("Added request {} to queue {} (current size: {}/{})", 
+        log.info("Added request {} to queue {} (current size: {}/{})",
                 request.getApprovalRequestId(), 
                 updatedQueue.getQueueName(), 
                 updatedQueue.getCurrentSize(), 

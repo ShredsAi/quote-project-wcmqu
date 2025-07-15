@@ -103,6 +103,21 @@ public interface DomainOutputPortApprovalQueueRepository {
     void deleteById(String queueId);
     
     /**
+     * Deletes all approval queues from the repository.
+     * This method is typically used for testing purposes.
+     */
+    void deleteAll();
+    
+    /**
+     * Deletes a list of approval queues from the repository.
+     * This method is typically used for testing purposes.
+     * 
+     * @param queues the list of approval queue entities to delete
+     * @throws IllegalArgumentException if queues is null
+     */
+    void deleteAll(List<DomainApprovalQueueEntity> queues);
+    
+    /**
      * Counts the total number of approval queues.
      * 
      * @return the total count of approval queues

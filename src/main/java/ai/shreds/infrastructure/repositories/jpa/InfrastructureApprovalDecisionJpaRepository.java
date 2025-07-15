@@ -8,13 +8,14 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * JPA repository interface for approval decision entities.
  * Provides data access operations for approval decisions.
  */
 @Repository
-public interface InfrastructureApprovalDecisionJpaRepository extends JpaRepository<InfrastructureApprovalDecisionJpaEntity, String> {
+public interface InfrastructureApprovalDecisionJpaRepository extends JpaRepository<InfrastructureApprovalDecisionJpaEntity, UUID> {
     
     /**
      * Finds approval decisions by approval request ID.
@@ -22,7 +23,7 @@ public interface InfrastructureApprovalDecisionJpaRepository extends JpaReposito
      * @param approvalRequestId the approval request ID to filter by
      * @return list of approval decisions for the request
      */
-    List<InfrastructureApprovalDecisionJpaEntity> findByApprovalRequestId(String approvalRequestId);
+    List<InfrastructureApprovalDecisionJpaEntity> findByApprovalRequestId(UUID approvalRequestId);
     
     /**
      * Finds approval decisions by moderator ID.
@@ -30,7 +31,7 @@ public interface InfrastructureApprovalDecisionJpaRepository extends JpaReposito
      * @param moderatorId the moderator ID to filter by
      * @return list of approval decisions made by the moderator
      */
-    List<InfrastructureApprovalDecisionJpaEntity> findByModeratorId(String moderatorId);
+    List<InfrastructureApprovalDecisionJpaEntity> findByModeratorId(UUID moderatorId);
     
     /**
      * Finds approval decisions by decision type.
@@ -47,7 +48,7 @@ public interface InfrastructureApprovalDecisionJpaRepository extends JpaReposito
      * @return the latest decision for the request if found
      */
     @Query("SELECT d FROM InfrastructureApprovalDecisionJpaEntity d WHERE d.approvalRequestId = :approvalRequestId ORDER BY d.decisionTimestamp DESC LIMIT 1")
-    Optional<InfrastructureApprovalDecisionJpaEntity> findLatestByApprovalRequestId(@Param("approvalRequestId") String approvalRequestId);
+    Optional<InfrastructureApprovalDecisionJpaEntity> findLatestByApprovalRequestId(@Param("approvalRequestId") UUID approvalRequestId);
     
     /**
      * Checks if a decision exists for a given approval request.
@@ -55,7 +56,7 @@ public interface InfrastructureApprovalDecisionJpaRepository extends JpaReposito
      * @param approvalRequestId the approval request ID to check
      * @return true if a decision exists for the request
      */
-    boolean existsByApprovalRequestId(String approvalRequestId);
+    boolean existsByApprovalRequestId(UUID approvalRequestId);
     
     /**
      * Counts approval decisions by decision type.
@@ -71,7 +72,7 @@ public interface InfrastructureApprovalDecisionJpaRepository extends JpaReposito
      * @param moderatorId the moderator ID to count
      * @return the count of decisions made by the moderator
      */
-    long countByModeratorId(String moderatorId);
+    long countByModeratorId(UUID moderatorId);
     
     /**
      * Counts approval decisions by moderator ID and decision type.
@@ -80,7 +81,7 @@ public interface InfrastructureApprovalDecisionJpaRepository extends JpaReposito
      * @param decision the decision type to filter by
      * @return the count of decisions matching the criteria
      */
-    long countByModeratorIdAndDecision(String moderatorId, String decision);
+    long countByModeratorIdAndDecision(UUID moderatorId, String decision);
     
     /**
      * Finds the average processing time for decisions made by a specific moderator.
@@ -89,5 +90,5 @@ public interface InfrastructureApprovalDecisionJpaRepository extends JpaReposito
      * @return the average processing time in milliseconds
      */
     @Query("SELECT AVG(d.processingTimeMs) FROM InfrastructureApprovalDecisionJpaEntity d WHERE d.moderatorId = :moderatorId")
-    Double findAverageProcessingTimeByModerator(@Param("moderatorId") String moderatorId);
+    Double findAverageProcessingTimeByModerator(@Param("moderatorId") UUID moderatorId);
 }

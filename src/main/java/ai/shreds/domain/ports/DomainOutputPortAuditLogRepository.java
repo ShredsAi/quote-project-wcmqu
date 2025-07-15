@@ -97,6 +97,20 @@ public interface DomainOutputPortAuditLogRepository {
     Optional<DomainApprovalAuditLogEntity> findMostRecentByRequestId(String requestId);
     
     /**
+     * Deletes an audit log by its ID.
+     * 
+     * @param auditId the ID of the audit log to delete
+     * @throws IllegalArgumentException if auditId is null or empty
+     */
+    void deleteById(String auditId);
+    
+    /**
+     * Deletes all audit logs from the repository.
+     * This method is typically used for testing purposes.
+     */
+    void deleteAll();
+    
+    /**
      * Counts the total number of audit logs.
      * 
      * @return the total count of audit logs

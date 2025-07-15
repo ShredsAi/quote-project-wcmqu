@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Repository
@@ -56,7 +57,7 @@ public class InfrastructureAuditLogRepositoryImpl implements DomainOutputPortAud
             
             log.debug("Finding audit log by ID: {}", auditId);
             
-            return jpaRepository.findById(auditId)
+            return jpaRepository.findById(UUID.fromString(auditId))
                     .map(entityMapper::toAuditLogDomain);
         } catch (Exception e) {
             log.error("Error finding audit log by ID: {}", auditId, e);
@@ -74,7 +75,7 @@ public class InfrastructureAuditLogRepositoryImpl implements DomainOutputPortAud
             
             log.debug("Finding audit logs by request ID: {}", requestId);
             
-            List<InfrastructureApprovalAuditLogJpaEntity> jpaEntities = jpaRepository.findByApprovalRequestIdOrderByTimestampAsc(requestId);
+            List<InfrastructureApprovalAuditLogJpaEntity> jpaEntities = jpaRepository.findByApprovalRequestIdOrderByTimestampAsc(UUID.fromString(requestId));
             List<DomainApprovalAuditLogEntity> result = entityMapper.toAuditLogDomainList(jpaEntities);
             
             log.debug("Found {} audit logs for request ID: {}", result.size(), requestId);
@@ -95,7 +96,7 @@ public class InfrastructureAuditLogRepositoryImpl implements DomainOutputPortAud
             
             log.debug("Finding audit logs by request ID ordered by timestamp: {}", requestId);
             
-            List<InfrastructureApprovalAuditLogJpaEntity> jpaEntities = jpaRepository.findByApprovalRequestIdOrderByTimestampAsc(requestId);
+            List<InfrastructureApprovalAuditLogJpaEntity> jpaEntities = jpaRepository.findByApprovalRequestIdOrderByTimestampAsc(UUID.fromString(requestId));
             List<DomainApprovalAuditLogEntity> result = entityMapper.toAuditLogDomainList(jpaEntities);
             
             log.debug("Found {} audit logs for request ID: {}", result.size(), requestId);
@@ -116,7 +117,7 @@ public class InfrastructureAuditLogRepositoryImpl implements DomainOutputPortAud
             
             log.debug("Finding audit logs by performed by ID: {}", performedById);
             
-            List<InfrastructureApprovalAuditLogJpaEntity> jpaEntities = jpaRepository.findByPerformedById(performedById);
+            List<InfrastructureApprovalAuditLogJpaEntity> jpaEntities = jpaRepository.findByPerformedById(UUID.fromString(performedById));
             List<DomainApprovalAuditLogEntity> result = entityMapper.toAuditLogDomainList(jpaEntities);
             
             log.debug("Found {} audit logs performed by ID: {}", result.size(), performedById);
@@ -182,7 +183,7 @@ public class InfrastructureAuditLogRepositoryImpl implements DomainOutputPortAud
             
             log.debug("Finding audit logs by request ID {} and action: {}", requestId, action);
             
-            List<InfrastructureApprovalAuditLogJpaEntity> jpaEntities = jpaRepository.findByApprovalRequestIdAndAction(requestId, action);
+            List<InfrastructureApprovalAuditLogJpaEntity> jpaEntities = jpaRepository.findByApprovalRequestIdAndAction(UUID.fromString(requestId), action);
             List<DomainApprovalAuditLogEntity> result = entityMapper.toAuditLogDomainList(jpaEntities);
             
             log.debug("Found {} audit logs for request ID {} and action: {}", result.size(), requestId, action);
@@ -203,11 +204,43 @@ public class InfrastructureAuditLogRepositoryImpl implements DomainOutputPortAud
             
             log.debug("Finding most recent audit log for request ID: {}", requestId);
             
-            return jpaRepository.findMostRecentByApprovalRequestId(requestId)
+            return jpaRepository.findMostRecentByApprovalRequestId(UUID.fromString(requestId))
                     .map(entityMapper::toAuditLogDomain);
         } catch (Exception e) {
             log.error("Error finding most recent audit log for request ID: {}", requestId, e);
             throw new InfrastructureRepositoryException("Failed to find most recent audit log for request ID", e);
+        }
+    }
+
+    @Override
+    public void deleteById(String auditId) {
+        try {
+            if (auditId == null || auditId.trim().isEmpty()) {
+                throw new IllegalArgumentException("Audit ID cannot be null or empty");
+            }
+            
+            log.debug("Deleting audit log with ID: {}", auditId);
+            
+            jpaRepository.deleteById(UUID.fromString(auditId));
+            
+            log.debug("Successfully deleted audit log with ID: {}", auditId);
+        } catch (Exception e) {
+            log.error("Error deleting audit log with ID: {}", auditId, e);
+            throw new InfrastructureRepositoryException("Failed to delete audit log", e);
+        }
+    }
+
+    @Override
+    public void deleteAll() {
+        try {
+            log.debug("Deleting all audit logs");
+            
+            jpaRepository.deleteAll();
+            
+            log.debug("Successfully deleted all audit logs");
+        } catch (Exception e) {
+            log.error("Error deleting all audit logs", e);
+            throw new InfrastructureRepositoryException("Failed to delete all audit logs", e);
         }
     }
 
@@ -234,7 +267,7 @@ public class InfrastructureAuditLogRepositoryImpl implements DomainOutputPortAud
             
             log.debug("Counting audit logs for request ID: {}", requestId);
             
-            return jpaRepository.countByApprovalRequestId(requestId);
+            return jpaRepository.countByApprovalRequestId(UUID.fromString(requestId));
         } catch (Exception e) {
             log.error("Error counting audit logs for request ID: {}", requestId, e);
             throw new InfrastructureRepositoryException("Failed to count audit logs for request ID", e);

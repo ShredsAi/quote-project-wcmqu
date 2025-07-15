@@ -12,6 +12,7 @@ import ai.shreds.domain.value_objects.DomainApprovalStatus;
 import ai.shreds.domain.value_objects.DomainPriority;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,6 +23,7 @@ import java.util.UUID;
  * Domain service for managing approval request lifecycle.
  * This service contains the core business logic for approval requests.
  */
+@Service
 @Slf4j
 @RequiredArgsConstructor
 public class DomainApprovalRequestService {
@@ -114,7 +116,7 @@ public class DomainApprovalRequestService {
         // Create audit log entry
         createAuditLogEntry(requestId, 
                           moderatorId, 
-                          "MODERATOR_ASSIGNED", 
+                          "ASSIGNED", 
                           oldModeratorId, 
                           moderatorId);
         
@@ -208,35 +210,63 @@ public class DomainApprovalRequestService {
      * @return the queue ID to use
      */
     private String selectQueueForRequest(DomainPriority priority) {
-        // For urgent requests, try to find a high-priority queue
+        log.debug("Selecting queue for request with priority: {}", priority);
+        
+        // Get all active queues
+        List<DomainApprovalQueueEntity> allQueues = queueRepository.findActiveQueues();
+        
+        if (allQueues.isEmpty()) {
+            throw new IllegalStateException("No active queues found for approval request");
+        }
+        
+        // For urgent requests, try to find a queue with 'Urgent' in its name
         if (priority.isUrgent()) {
-            Optional<DomainApprovalQueueEntity> urgentQueue = queueRepository.findByName("Urgent Queue");
-            if (urgentQueue.isPresent() && urgentQueue.get().canAcceptRequest()) {
-                return urgentQueue.get().getQueueId();
+            for (DomainApprovalQueueEntity queue : allQueues) {
+                if (queue.getQueueName().toLowerCase().contains("urgent") && queue.canAcceptRequest()) {
+                    log.debug("Selected urgent queue: {}", queue.getQueueName());
+                    return queue.getQueueId();
+                }
             }
         }
         
-        // For high priority requests, try to find a high-priority queue
+        // For high priority requests, try to find a queue with 'High' or 'Priority' in its name
         if (priority == DomainPriority.HIGH) {
-            Optional<DomainApprovalQueueEntity> highPriorityQueue = queueRepository.findByName("High Priority Queue");
-            if (highPriorityQueue.isPresent() && highPriorityQueue.get().canAcceptRequest()) {
-                return highPriorityQueue.get().getQueueId();
+            for (DomainApprovalQueueEntity queue : allQueues) {
+                String queueNameLower = queue.getQueueName().toLowerCase();
+                if ((queueNameLower.contains("high") || queueNameLower.contains("priority")) && queue.canAcceptRequest()) {
+                    log.debug("Selected high priority queue: {}", queue.getQueueName());
+                    return queue.getQueueId();
+                }
             }
         }
         
-        // Otherwise, use the general queue or the least loaded queue
-        Optional<DomainApprovalQueueEntity> generalQueue = queueRepository.findByName("General Queue");
-        if (generalQueue.isPresent() && generalQueue.get().canAcceptRequest()) {
-            return generalQueue.get().getQueueId();
+        // For all other cases, try to find a queue with 'General' in its name
+        for (DomainApprovalQueueEntity queue : allQueues) {
+            if (queue.getQueueName().toLowerCase().contains("general") && queue.canAcceptRequest()) {
+                log.debug("Selected general queue: {}", queue.getQueueName());
+                return queue.getQueueId();
+            }
         }
         
-        // If no specific queue is available, use the least loaded queue
+        // If no specific queue is available, use the first available queue
+        for (DomainApprovalQueueEntity queue : allQueues) {
+            if (queue.canAcceptRequest()) {
+                log.debug("Selected first available queue: {}", queue.getQueueName());
+                return queue.getQueueId();
+            }
+        }
+        
+        // If no queue has capacity, use the least loaded queue
         Optional<DomainApprovalQueueEntity> leastLoadedQueue = queueRepository.findLeastLoadedQueue();
         if (leastLoadedQueue.isPresent()) {
+            log.debug("Selected least loaded queue: {}", leastLoadedQueue.get().getQueueName());
             return leastLoadedQueue.get().getQueueId();
         }
         
-        throw new IllegalStateException("No available queue found for approval request");
+        // As a last resort, use the first queue
+        DomainApprovalQueueEntity firstQueue = allQueues.get(0);
+        log.debug("Selected first queue as fallback: {}", firstQueue.getQueueName());
+        return firstQueue.getQueueId();
     }
     
     /**

@@ -112,6 +112,12 @@ public interface DomainOutputPortApprovalRequestRepository {
     void deleteById(String requestId);
     
     /**
+     * Deletes all approval requests from the repository.
+     * This method is typically used for testing purposes.
+     */
+    void deleteAll();
+    
+    /**
      * Counts the total number of approval requests.
      * 
      * @return the total count of approval requests

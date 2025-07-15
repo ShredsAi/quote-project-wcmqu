@@ -59,7 +59,6 @@ public class InfrastructureDatabaseConfig {
         properties.put("hibernate.order_inserts", "true");
         properties.put("hibernate.order_updates", "true");
         properties.put("hibernate.jdbc.batch_versioned_data", "true");
-        properties.put("hibernate.connection.provider_disables_autocommit", "true");
         
         return builder
             .dataSource(dataSource)

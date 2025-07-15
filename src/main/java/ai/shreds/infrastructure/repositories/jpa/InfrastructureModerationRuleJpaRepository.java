@@ -7,13 +7,14 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * JPA repository interface for moderation rule entities.
  * Provides data access operations for moderation rules.
  */
 @Repository
-public interface InfrastructureModerationRuleJpaRepository extends JpaRepository<InfrastructureModerationRuleJpaEntity, String> {
+public interface InfrastructureModerationRuleJpaRepository extends JpaRepository<InfrastructureModerationRuleJpaEntity, UUID> {
     
     /**
      * Finds all active moderation rules.

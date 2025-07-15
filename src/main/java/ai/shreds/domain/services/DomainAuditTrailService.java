@@ -4,6 +4,7 @@ import ai.shreds.domain.entities.DomainApprovalAuditLogEntity;
 import ai.shreds.domain.ports.DomainOutputPortAuditLogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
  * Domain service for maintaining comprehensive audit logging for all approval activities.
  * This service handles audit trail creation, retrieval, and reporting.
  */
+@Service
 @Slf4j
 @RequiredArgsConstructor
 public class DomainAuditTrailService {

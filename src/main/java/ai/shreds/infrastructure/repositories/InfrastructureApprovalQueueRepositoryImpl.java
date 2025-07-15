@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
@@ -55,7 +57,7 @@ public class InfrastructureApprovalQueueRepositoryImpl implements DomainOutputPo
             
             log.debug("Finding approval queue by ID: {}", queueId);
             
-            return jpaRepository.findById(queueId)
+            return jpaRepository.findById(UUID.fromString(queueId))
                     .map(entityMapper::toApprovalQueueDomain);
         } catch (Exception e) {
             log.error("Error finding approval queue with ID: {}", queueId, e);
@@ -125,7 +127,7 @@ public class InfrastructureApprovalQueueRepositoryImpl implements DomainOutputPo
             log.debug("Updating approval queue with ID: {}", queue.getQueueId());
             
             // Check if entity exists
-            if (!jpaRepository.existsById(queue.getQueueId())) {
+            if (!jpaRepository.existsById(UUID.fromString(queue.getQueueId()))) {
                 log.error("Approval queue not found for update with ID: {}", queue.getQueueId());
                 throw new InfrastructureRepositoryException("Approval queue not found for update");
             }
@@ -221,12 +223,48 @@ public class InfrastructureApprovalQueueRepositoryImpl implements DomainOutputPo
             
             log.debug("Deleting approval queue with ID: {}", queueId);
             
-            jpaRepository.deleteById(queueId);
+            jpaRepository.deleteById(UUID.fromString(queueId));
             
             log.debug("Successfully deleted approval queue with ID: {}", queueId);
         } catch (Exception e) {
             log.error("Error deleting approval queue with ID: {}", queueId, e);
             throw new InfrastructureRepositoryException("Failed to delete approval queue", e);
+        }
+    }
+
+    @Override
+    public void deleteAll() {
+        try {
+            log.debug("Deleting all approval queues");
+            
+            jpaRepository.deleteAll();
+            
+            log.debug("Successfully deleted all approval queues");
+        } catch (Exception e) {
+            log.error("Error deleting all approval queues", e);
+            throw new InfrastructureRepositoryException("Failed to delete all approval queues", e);
+        }
+    }
+
+    @Override
+    public void deleteAll(List<DomainApprovalQueueEntity> queues) {
+        try {
+            if (queues == null) {
+                throw new IllegalArgumentException("Queues list cannot be null");
+            }
+            
+            log.debug("Deleting {} approval queues", queues.size());
+            
+            List<InfrastructureApprovalQueueJpaEntity> jpaEntities = queues.stream()
+                    .map(entityMapper::toApprovalQueueJpa)
+                    .collect(Collectors.toList());
+            
+            jpaRepository.deleteAll(jpaEntities);
+            
+            log.debug("Successfully deleted {} approval queues", queues.size());
+        } catch (Exception e) {
+            log.error("Error deleting approval queues", e);
+            throw new InfrastructureRepositoryException("Failed to delete approval queues", e);
         }
     }
 
