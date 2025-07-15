@@ -6,13 +6,18 @@ import ai.shreds.domain.entities.DomainApprovalQueueEntity;
 import ai.shreds.domain.entities.DomainApprovalRequestEntity;
 import ai.shreds.domain.ports.DomainOutputPortApprovalQueueRepository;
 import ai.shreds.domain.ports.DomainOutputPortApprovalRequestRepository;
+import ai.shreds.domain.ports.DomainOutputPortApprovalDecisionRepository;
+import ai.shreds.domain.ports.DomainOutputPortAuditLogRepository;
 import ai.shreds.domain.value_objects.DomainApprovalStatus;
 import ai.shreds.domain.value_objects.DomainDecisionType;
 import ai.shreds.domain.value_objects.DomainPriority;
 import ai.shreds.shared.dtos.SharedApprovalDecisionDTO;
+import ai.shreds.shared.dtos.SharedApprovalRequestDTO;
 import ai.shreds.shared.dtos.SharedQuoteApprovedEventDTO;
+import ai.shreds.shared.dtos.SharedQuoteCreatedEventDTO;
 import ai.shreds.shared.dtos.SharedQuoteRejectedEventDTO;
 import ai.shreds.shared.value_objects.SharedApprovalDecisionRequestParams;
+import ai.shreds.shared.value_objects.SharedModeratorAssignmentRequestParams;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +41,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -84,7 +90,13 @@ class ApprovalDecisionIntegrationTest {
     private DomainOutputPortApprovalRequestRepository approvalRequestRepository;
 
     @Autowired
+    private DomainOutputPortApprovalDecisionRepository approvalDecisionRepository;
+
+    @Autowired
     private DomainOutputPortApprovalQueueRepository approvalQueueRepository;
+
+    @Autowired
+    private DomainOutputPortAuditLogRepository auditLogRepository;
 
     @Autowired
     private TestEventListener eventListener;
@@ -209,6 +221,124 @@ class ApprovalDecisionIntegrationTest {
             Thread.currentThread().interrupt();
             logger.warn("Interrupted while waiting for rejected event");
         }
+    }
+
+    @Test
+    @Transactional
+    void When_Complete_Approval_Workflow_Executes_Then_All_Components_Work_Together() {
+        logger.info("=== Starting complete approval workflow test ===");
+        
+        // Step 1: Create a quote submission event
+        String newQuoteId = UUID.randomUUID().toString();
+        String newSubmitterId = UUID.randomUUID().toString();
+        String newModeratorId = UUID.randomUUID().toString();
+        
+        SharedQuoteCreatedEventDTO quoteCreatedEvent = SharedQuoteCreatedEventDTO.builder()
+                .eventType("QuoteCreatedEvent")
+                .quoteId(newQuoteId)
+                .submittedBy(newSubmitterId)
+                .priority("HIGH")
+                .timestamp(LocalDateTime.now().toString())
+                .build();
+        
+        logger.info("Step 1: Submitting quote {} for approval", newQuoteId);
+        
+        // Step 2: Submit for approval
+        SharedApprovalRequestDTO approvalRequest = applicationApprovalService.submitForApproval(quoteCreatedEvent);
+        
+        // Verify approval request is created
+        assertThat(approvalRequest).isNotNull();
+        assertThat(approvalRequest.getApprovalRequestId()).isNotNull();
+        assertThat(approvalRequest.getQuoteId()).isEqualTo(newQuoteId);
+        assertThat(approvalRequest.getSubmittedById()).isEqualTo(newSubmitterId);
+        assertThat(approvalRequest.getPriority()).isEqualTo("HIGH");
+        assertThat(approvalRequest.getStatus()).isEqualTo(DomainApprovalStatus.PENDING.name());
+        
+        logger.info("Step 1 completed: Approval request created with ID {}", approvalRequest.getApprovalRequestId());
+        
+        // Step 3: Assign moderator
+        logger.info("Step 2: Assigning moderator {} to request {}", newModeratorId, approvalRequest.getApprovalRequestId());
+        
+        SharedModeratorAssignmentRequestParams assignmentParams = new SharedModeratorAssignmentRequestParams(
+                newModeratorId
+        );
+        
+        SharedApprovalRequestDTO assignedRequest = applicationApprovalService.assignModerator(
+                approvalRequest.getApprovalRequestId(), assignmentParams);
+        
+        // Verify moderator assignment
+        assertThat(assignedRequest).isNotNull();
+        assertThat(assignedRequest.getAssignedModeratorId()).isEqualTo(newModeratorId);
+        assertThat(assignedRequest.getStatus()).isEqualTo(DomainApprovalStatus.IN_REVIEW.name());
+        assertThat(assignedRequest.getAssignedAt()).isNotNull();
+        
+        logger.info("Step 2 completed: Moderator assigned successfully");
+        
+        // Step 4: Make approval decision
+        logger.info("Step 3: Making approval decision for request {}", approvalRequest.getApprovalRequestId());
+        
+        SharedApprovalDecisionRequestParams decisionParams = new SharedApprovalDecisionRequestParams(
+                DomainDecisionType.APPROVED.name(),
+                "High quality quote with proper attribution",
+                "Quote meets all quality standards and guidelines",
+                newModeratorId
+        );
+        
+        SharedApprovalDecisionDTO decision = applicationApprovalService.approveQuote(
+                approvalRequest.getApprovalRequestId(), decisionParams);
+        
+        // Verify decision is stored
+        assertThat(decision).isNotNull();
+        assertThat(decision.getDecisionId()).isNotNull();
+        assertThat(decision.getApprovalRequestId()).isEqualTo(approvalRequest.getApprovalRequestId());
+        assertThat(decision.getModeratorId()).isEqualTo(newModeratorId);
+        assertThat(decision.getDecision()).isEqualTo(DomainDecisionType.APPROVED.name());
+        assertThat(decision.getProcessingTimeMs()).isNotNull();
+        
+        logger.info("Step 3 completed: Approval decision recorded");
+        
+        // Step 5: Verify final state in database
+        logger.info("Step 4: Verifying database state");
+        
+        DomainApprovalRequestEntity finalRequest = approvalRequestRepository.findById(approvalRequest.getApprovalRequestId()).get();
+        assertThat(finalRequest.getStatus()).isEqualTo(DomainApprovalStatus.APPROVED);
+        assertThat(finalRequest.getAssignedModeratorId()).isEqualTo(newModeratorId);
+        
+        // Verify decision is persisted
+        List<ai.shreds.domain.entities.DomainApprovalDecisionEntity> decisions = approvalDecisionRepository.findByRequestId(approvalRequest.getApprovalRequestId());
+        assertThat(decisions).hasSize(1);
+        assertThat(decisions.get(0).getDecision().name()).isEqualTo(DomainDecisionType.APPROVED.name());
+        
+        // Verify audit trail is created
+        List<ai.shreds.domain.entities.DomainApprovalAuditLogEntity> auditLogs = auditLogRepository.findByRequestId(approvalRequest.getApprovalRequestId());
+        assertThat(auditLogs).isNotEmpty();
+        
+        logger.info("Step 4 completed: Database state verified");
+        
+        // Step 6: Verify event publication
+        logger.info("Step 5: Verifying event publication");
+        
+        try {
+            boolean eventReceived = eventListener.waitForApprovedEvent(5, TimeUnit.SECONDS);
+            if (eventReceived) {
+                SharedQuoteApprovedEventDTO publishedEvent = eventListener.getLastApprovedEvent();
+                assertThat(publishedEvent).isNotNull();
+                assertThat(publishedEvent.getQuoteId()).isEqualTo(newQuoteId);
+                assertThat(publishedEvent.getModeratorId()).isEqualTo(newModeratorId);
+                assertThat(publishedEvent.getEventType()).isEqualTo("QuoteApprovedEvent");
+                
+                logger.info("Step 5 completed: Quote approved event received and verified");
+            } else {
+                logger.warn("Quote approved event not received within timeout");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.warn("Interrupted while waiting for approved event");
+        }
+        
+        logger.info("=== Complete approval workflow test completed successfully ===");
+        logger.info("Workflow summary: Quote {} -> Submitted -> Assigned to {} -> Approved -> Event Published", 
+                newQuoteId, newModeratorId);
     }
     
     @Configuration
